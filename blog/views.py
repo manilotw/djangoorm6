@@ -31,12 +31,42 @@ def get_likes_count(post):
 
 def index(request):
 
-    posts = Post.objects.annotate(likes_count=Count('likes')).prefetch_related('author')
+    def serialize_post_optimized(post):
+        return {
+        'title': post.title,
+        'teaser_text': post.text[:200],
+        'author': post.author.username,
+        'comments_amount': post.comments_count,
+        'image_url': post.image.url if post.image else None,
+        'published_at': post.published_at,
+        'slug': post.slug,
+        'tags': [serialize_tag(tag) for tag in post.tags.all()],
+        'first_tag_title': post.tags.all()[0].title,
+    }
+
+    posts = Post.objects.annotate(
+        likes_count=Count('likes', distinct=True)).prefetch_related('author')
+    
     popular_posts = posts.order_by('-likes_count')
     most_popular_posts = popular_posts[:5]
+    most_popular_posts_id = [post.id for post in most_popular_posts]
+    posts_with_comments = Post.objects.filter(id__in=most_popular_posts_id).annotate(comments_count=Count('comments'))
+    ids_and_comments = posts_with_comments.values_list('id','comments_count')
+    count_for_id = dict(ids_and_comments)
 
-    fresh_posts = Post.objects.order_by('-published_at').prefetch_related('author')
-    most_fresh_posts = list(fresh_posts)[:5]
+    for post in most_popular_posts:
+        post.comments_count = count_for_id[post.id]
+
+    fresh_posts = posts.order_by('-published_at')
+    most_fresh_posts = fresh_posts[:5]
+    most_fresh_posts_id = [fresh_post.id for fresh_post in most_fresh_posts]
+    fresh_posts_with_comment = Post.objects.filter(id__in=most_fresh_posts_id).annotate(comments_count=Count('comments'))
+    ids_and_comments = fresh_posts_with_comment.values_list('id','comments_count')
+    count_for_id = dict(ids_and_comments)
+
+    for post in most_fresh_posts:
+        post.comments_count = count_for_id[post.id]
+    
 
     tags = Tag.objects.annotate(tags_count=Count('posts'))
     popular_tags = tags.order_by('-tags_count')
@@ -44,9 +74,9 @@ def index(request):
 
     context = {
         'most_popular_posts': [
-            serialize_post(post) for post in most_popular_posts
+            serialize_post_optimized(post) for post in most_popular_posts
         ],
-        'page_posts': [serialize_post(post) for post in most_fresh_posts],
+        'page_posts': [serialize_post_optimized(post) for post in most_fresh_posts],
         'popular_tags': [serialize_tag(tag) for tag in most_popular_tags],
     }
     return render(request, 'index.html', context)
