@@ -1,7 +1,20 @@
 from django.db import models
 from django.urls import reverse
 from django.contrib.auth.models import User
+from django.db.models import Count
 
+
+class PostQuerySet(models.QuerySet):
+    
+    def year(self, year):
+        posts_at_year = self.filter(published_at__year=year).order_by('published_at')
+        return posts_at_year
+    
+class TagQuerySet(models.QuerySet):
+    
+    def popular(self):
+        popular_tags = self.annotate(tags_count=Count('posts')).order_by('-tags_count')
+        return popular_tags
 
 class Post(models.Model):
     title = models.CharField('Заголовок', max_length=200)
@@ -9,6 +22,7 @@ class Post(models.Model):
     slug = models.SlugField('Название в виде url', max_length=200)
     image = models.ImageField('Картинка')
     published_at = models.DateTimeField('Дата и время публикации')
+    objects = PostQuerySet.as_manager()
 
     author = models.ForeignKey(
         User,
@@ -38,6 +52,7 @@ class Post(models.Model):
 
 
 class Tag(models.Model):
+    objects = TagQuerySet.as_manager()
     title = models.CharField('Тег', max_length=20, unique=True)
 
     def __str__(self):
@@ -76,3 +91,5 @@ class Comment(models.Model):
         ordering = ['published_at']
         verbose_name = 'комментарий'
         verbose_name_plural = 'комментарии'
+
+
