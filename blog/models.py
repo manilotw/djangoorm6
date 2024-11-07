@@ -3,7 +3,23 @@ from django.urls import reverse
 from django.contrib.auth.models import User
 from django.db.models import Count, Prefetch
 
+class CommentQuerySet(models.QuerySet):
+    def fetch_comments(self, post):
+        
+        comments = self.filter(post=post).values('id', 'text', 'published_at', 'author__username')
 
+        comments_list = [
+            {
+                'id': comment['id'],
+                'text': comment['text'],
+                'published_at': comment['published_at'],
+                'author': comment['author__username']
+            }
+            for comment in comments
+        ]
+
+        return comments_list
+            
 class PostQuerySet(models.QuerySet):
     
     def year(self, year):
@@ -90,6 +106,7 @@ class Tag(models.Model):
 
 
 class Comment(models.Model):
+    objects = CommentQuerySet.as_manager()
     post = models.ForeignKey(
         'Post',
         on_delete=models.CASCADE,
