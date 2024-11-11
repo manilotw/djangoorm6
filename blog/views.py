@@ -70,7 +70,7 @@ def post_detail(request, slug):
 
     most_popular_tags = Tag.objects.popular()[:5]
 
-    most_popular_posts = Post.objects.fetch_with_comments_count()[:5]  # TODO. Как это посчитать?
+    most_popular_posts = Post.objects.fetch_with_comments_count()[:5]  
 
     context = {
         'post': serialized_post,
@@ -103,6 +103,5 @@ def tag_filter(request, tag_title):
 
 
 def contacts(request):
-    # позже здесь будет код для статистики заходов на эту страницу
-    # и для записи фидбека
+
     return render(request, 'contacts.html', {})
