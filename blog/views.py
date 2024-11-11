@@ -84,7 +84,7 @@ def post_detail(request, slug):
 
 def tag_filter(request, tag_title):
 
-    tag = Tag.objects.get(title=tag_title)
+    tag = get_object_or_404(Tag, title=tag_title)
     most_popular_tags = Tag.objects.popular()[:5]
 
     most_popular_posts = Post.objects.fetch_with_comments_count()[:5]
