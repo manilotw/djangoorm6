@@ -5,20 +5,12 @@ from django.db.models import Count, Prefetch
 
 class CommentQuerySet(models.QuerySet):
     def fetch_comments(self, post):
-        
-        comments = self.filter(post=post).values('id', 'text', 'published_at', 'author__username')
-
-        comments_list = [
-            {
-                'id': comment['id'],
-                'text': comment['text'],
-                'published_at': comment['published_at'],
-                'author': comment['author__username']
-            }
-            for comment in comments
-        ]
-
-        return comments_list
+        return (
+            self.filter(post=post)
+            .select_related('author')
+            .only('id', 'text', 'published_at', 'author__username')
+            .values('id', 'text', 'published_at', 'author__username')
+        )
             
 class PostQuerySet(models.QuerySet):
     
