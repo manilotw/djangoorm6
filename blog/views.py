@@ -4,7 +4,7 @@ from django.shortcuts import get_object_or_404
 
 
 def serialize_post(post):
-        return {
+    return {
         'title': post.title,
         'teaser_text': post.text[:200],
         'author': post.author.username,
@@ -18,7 +18,7 @@ def serialize_post(post):
 
 
 def serialize_tag(tag):
-        return {
+    return {
         'title': tag.title,
         'posts_with_tag': tag.tags_count,
     }
