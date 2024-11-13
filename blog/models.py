@@ -61,7 +61,6 @@ class Post(models.Model):
     slug = models.SlugField('Название в виде url', max_length=200)
     image = models.ImageField('Картинка')
     published_at = models.DateTimeField('Дата и время публикации')
-    objects = PostQuerySet.as_manager()
 
     author = models.ForeignKey(
         User,
@@ -78,6 +77,8 @@ class Post(models.Model):
         related_name='posts',
         verbose_name='Теги')
 
+    objects = PostQuerySet.as_manager()
+
     def __str__(self):
         return self.title
 
@@ -91,8 +92,8 @@ class Post(models.Model):
 
 
 class Tag(models.Model):
-    objects = TagQuerySet.as_manager()
     title = models.CharField('Тег', max_length=20, unique=True)
+    objects = TagQuerySet.as_manager()
 
     def __str__(self):
         return self.title
@@ -110,7 +111,6 @@ class Tag(models.Model):
 
 
 class Comment(models.Model):
-    objects = CommentQuerySet.as_manager()
     post = models.ForeignKey(
         'Post',
         on_delete=models.CASCADE,
@@ -123,6 +123,7 @@ class Comment(models.Model):
 
     text = models.TextField('Текст комментария')
     published_at = models.DateTimeField('Дата и время публикации')
+    objects = CommentQuerySet.as_manager()
 
     def __str__(self):
         return f'{self.author.username} under {self.post.title}'
