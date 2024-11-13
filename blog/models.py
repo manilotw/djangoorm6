@@ -25,29 +25,17 @@ class PostQuerySet(models.QuerySet):
 
         return popular_posts
     
-    def fetch_with_comments_count(self):
-        popular_posts = self.popular()
-        popular_posts_ids = [post.id for post in popular_posts]
-        posts_with_comments = self.filter(id__in=popular_posts_ids).annotate(comments_count=Count('comments'))
+    def fetch_with_comments_count(self, posts):
+       
+        posts_ids = [post.id for post in posts]
+        posts_with_comments = self.filter(id__in=posts_ids).annotate(comments_count=Count('comments'))
         ids_and_comments = posts_with_comments.values_list('id','comments_count')
         count_for_id = dict(ids_and_comments)
 
-        for post in popular_posts:
+        for post in posts:
             post.comments_count = count_for_id[post.id]
 
-        return popular_posts
-    
-    def fetch_with_comments_count_fresh(self):
-        fresh_posts = self.order_by('-published_at')
-        fresh_posts_ids = [post.id for post in fresh_posts]
-        posts_with_comments = self.filter(id__in=fresh_posts_ids).annotate(comments_count=Count('comments'))
-        ids_and_comments = posts_with_comments.values_list('id','comments_count')
-        count_for_id = dict(ids_and_comments)
-
-        for post in fresh_posts:
-            post.comments_count = count_for_id[post.id]
-
-        return fresh_posts
+        return posts
    
 class TagQuerySet(models.QuerySet):
     
