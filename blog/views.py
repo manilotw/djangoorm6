@@ -42,7 +42,7 @@ def index(request):
 
 
 def post_detail(request, slug):
-    post = get_object_or_404(Post.objects.popualar(), slug=slug)
+    post = get_object_or_404(Post.objects.popular(), slug=slug)
     comments = post.comments.fetch_comments(post=post)
     serialized_comments = [
         {
