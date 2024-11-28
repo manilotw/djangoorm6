@@ -25,9 +25,17 @@ def serialize_tag(tag):
 
 def index(request):
     
-    most_popular_posts = Post.objects.popular().fetch_with_comments_count()[:5]
+    most_popular_posts = Post.objects.popular()\
+        .select_related('author')\
+        .prefetch_related('tags')[:5]\
+        .fetch_with_comments_count()\
 
-    most_fresh_posts = Post.objects.order_by('-published_at').fetch_with_comments_count()[:5]
+    most_fresh_posts = Post.objects\
+        .order_by('-published_at')\
+        .select_related('author')\
+        .fetch_with_comments_count()\
+        .prefetch_related('tags')[:5]\
+        .fetch_with_comments_count()[:5]
     
     most_popular_tags = Tag.objects.popular()[:5]
 

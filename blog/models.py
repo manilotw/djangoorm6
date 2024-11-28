@@ -25,7 +25,9 @@ class PostQuerySet(models.QuerySet):
     def fetch_with_comments_count(self):
        
         posts_ids = [post.id for post in self]
-        posts_with_comments = self.filter(id__in=posts_ids).annotate(comments_count=Count('comments'))
+        posts_with_comments = self.model.objects \
+            .filter(id__in=posts_ids) \
+            .annotate(comments_count=Count('comments'))
         ids_and_comments = posts_with_comments.values_list('id','comments_count')
         count_for_id = dict(ids_and_comments)
 
@@ -37,7 +39,7 @@ class PostQuerySet(models.QuerySet):
     def with_related_tags(self):
         
         return self.prefetch_related(
-            Prefetch('tags', queryset=Tag.objects.annotate(tags_count=Count('posts')))
+            Prefetch('tags', queryset=Tag.objects.annotate(posts_count=Count('posts')))
         )
    
 class TagQuerySet(models.QuerySet):
