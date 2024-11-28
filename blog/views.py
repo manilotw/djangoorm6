@@ -20,14 +20,14 @@ def serialize_post(post):
 def serialize_tag(tag):
     return {
         'title': tag.title,
-        'posts_with_tag': tag.tags_count,
+        'posts_with_tag': tag.posts_count,
     }
 
 def index(request):
     
-    most_popular_posts = Post.objects.fetch_with_comments_count(Post.objects.popular())[:5]
+    most_popular_posts = Post.objects.popular().fetch_with_comments_count()[:5]
 
-    most_fresh_posts = Post.objects.fetch_with_comments_count(Post.objects.order_by('-published_at'))[:5]
+    most_fresh_posts = Post.objects.order_by('-published_at').fetch_with_comments_count()[:5]
     
     most_popular_tags = Tag.objects.popular()[:5]
 
@@ -42,16 +42,16 @@ def index(request):
 
 
 def post_detail(request, slug):
-    post = get_object_or_404(Post.objects.popular(), slug=slug)
-    comments = post.comments.fetch_comments(post=post)
-    serialized_comments = [
-        {
-            'text': comment['text'],
-            'published_at': comment['published_at'],
-            'author': comment['author__username'],
-        }
-        for comment in comments
-    ]
+    post = get_object_or_404(Post.objects.select_related('author').popular(), slug=slug)
+    comments = post.comments.select_related('author')
+    serialized_comments = []
+
+    for comment in comments:
+        serialized_comments.append({
+            'text': comment.text,
+            'published_at': comment.published_at,
+            'author': comment.author.username,
+        })
 
     related_tags = post.tags.popular()
 
@@ -69,7 +69,7 @@ def post_detail(request, slug):
 
     most_popular_tags = Tag.objects.popular()[:5]
 
-    most_popular_posts = Post.objects.fetch_with_comments_count(Post.objects.popular())[:5]  
+    most_popular_posts = Post.objects.popular().fetch_with_comments_count()[:5]  
 
     context = {
         'post': serialized_post,
@@ -86,9 +86,9 @@ def tag_filter(request, tag_title):
     tag = get_object_or_404(Tag, title=tag_title)
     most_popular_tags = Tag.objects.popular()[:5]
 
-    most_popular_posts = Post.objects.fetch_with_comments_count(Post.objects.popular())[:5]
+    most_popular_posts = Post.objects.popular().fetch_with_comments_count()[:5]
 
-    related_posts = tag.posts.fetch_with_comments_count(Post.objects.popular())[:20]
+    related_posts = tag.posts.popular().fetch_with_comments_count()[:20]
 
     context = {
         'tag': tag.title,

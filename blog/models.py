@@ -19,44 +19,36 @@ class PostQuerySet(models.QuerySet):
         return posts_at_year
     
     def popular(self):
-        tags_with_count = Tag.objects.with_posts_count()
-        posts = self.annotate(likes_count=Count('likes', distinct=True)).prefetch_related(
-            'author',
-            'likes',
-            Prefetch('tags', queryset=tags_with_count)
-        )
-        popular_posts = posts.order_by('-likes_count')
-        return popular_posts
+        posts_by_likes_count = self.annotate(likes_count=Count('likes')).order_by('-likes_count')
+        return posts_by_likes_count
     
-    def fetch_with_comments_count(self, posts):
+    def fetch_with_comments_count(self):
        
-        posts_ids = [post.id for post in posts]
+        posts_ids = [post.id for post in self]
         posts_with_comments = self.filter(id__in=posts_ids).annotate(comments_count=Count('comments'))
         ids_and_comments = posts_with_comments.values_list('id','comments_count')
         count_for_id = dict(ids_and_comments)
 
-        for post in posts:
+        for post in self:
             post.comments_count = count_for_id[post.id]
 
-        return posts
+        return self
     
     def with_related_tags(self):
         
         return self.prefetch_related(
-            'author',
-            'likes',
             Prefetch('tags', queryset=Tag.objects.annotate(tags_count=Count('posts')))
         )
    
 class TagQuerySet(models.QuerySet):
     
     def popular(self):
-        popular_tags = self.annotate(tags_count=Count('posts')).order_by('-tags_count')
+        popular_tags = self.annotate(posts_count=Count('posts')).order_by('-posts_count')
 
         return popular_tags
     
     def with_posts_count(self):
-        return self.annotate(tags_count=Count('posts'))
+        return self.annotate(posts_count=Count('posts'))
 
 class Post(models.Model):
     title = models.CharField('Заголовок', max_length=200)
