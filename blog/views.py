@@ -95,9 +95,13 @@ def tag_filter(request, tag_title):
     tag = get_object_or_404(Tag, title=tag_title)
     most_popular_tags = Tag.objects.popular()[:5]
 
-    most_popular_posts = Post.objects.popular().fetch_with_comments_count()[:5]
+    most_popular_posts = Post.objects.popular().with_related_tags().fetch_with_comments_count()[:5]
 
-    related_posts = tag.posts.popular().fetch_with_comments_count()[:20]
+    related_posts = tag.posts.popular()\
+    .select_related('author')\
+    .with_related_tags()\
+    .fetch_with_comments_count()[:20]
+
 
     context = {
         'tag': tag.title,
