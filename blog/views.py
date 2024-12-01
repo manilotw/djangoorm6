@@ -27,15 +27,12 @@ def index(request):
     
     most_popular_posts = Post.objects.popular()\
         .with_related_tags()\
-        .select_related()\
         .fetch_with_comments_count()\
 
     most_fresh_posts = Post.objects\
         .order_by('-published_at')\
         .with_related_tags()\
         .select_related('author')\
-        .fetch_with_comments_count()\
-        .prefetch_related('tags')[:5]\
         .fetch_with_comments_count()[:5]
     
     most_popular_tags = Tag.objects.popular()[:5]
